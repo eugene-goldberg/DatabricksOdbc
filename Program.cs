@@ -12,19 +12,21 @@ namespace ByODBCDriver
     {
         static void Main(string[] args)
         {
+            int batchSize = 50000;
+
             // Connection string for the Delta Lake ODBC driver
             //string connectionString = "Driver=Simba Spark;Host=https://adb-2986225719779619.19.azuredatabricks.net;Port=443;Schema=default;SSL=1;AuthMech=3;HTTPPath=sql/protocolv1/o/2986225719779619/0313-132056-j7llecvq;AuthMech=3;UID=token;PWD=435efe65ee20bc3f";
 
-           /* string connectionString = "DSN=SimbaSpark;" +
-                          "Host=https://adb-2986225719779619.19.azuredatabricks.net;" +
-                          "Port=443;" +
-                          "HTTPPath=sql/protocolv1/o/2986225719779619/0313-132056-j7llecvq;" +
-                          "ThriftTransport=2;" +
-                          "SSL=1;" +
-                          "AuthMech=3;" +
-                          "UID=token;" +
-                          "PWD=435efe65ee20bc3f";
-            */
+            /* string connectionString = "DSN=SimbaSpark;" +
+                           "Host=https://adb-2986225719779619.19.azuredatabricks.net;" +
+                           "Port=443;" +
+                           "HTTPPath=sql/protocolv1/o/2986225719779619/0313-132056-j7llecvq;" +
+                           "ThriftTransport=2;" +
+                           "SSL=1;" +
+                           "AuthMech=3;" +
+                           "UID=token;" +
+                           "PWD=435efe65ee20bc3f";
+             */
             string connectionString = "DSN=DatabricksWarehouse";
 
 
@@ -37,6 +39,7 @@ namespace ByODBCDriver
             var after = DateTime.Now;
             List<string> records = new List<string>();
             // Create the ODBC connection
+            
             using (OdbcConnection connection = new OdbcConnection(connectionString))
             {
                 try
@@ -74,7 +77,7 @@ namespace ByODBCDriver
                     }
                     after = DateTime.Now;
                     Console.WriteLine("records.Count():  " + records.Count().ToString());
-                    Console.WriteLine("Total elapsed time to join and retrieve " + records.Count().ToString() + "records from Databricks VIA ODBC:   " + after.Subtract(before).ToString());
+                    Console.WriteLine("Total elapsed time to join and retrieve " + records.Count().ToString() + "   records from Databricks VIA ODBC:   " + after.Subtract(before).ToString());
                     Console.WriteLine("records[9999]:  " + records[50]);
                     Console.ReadLine();
                 }
@@ -83,7 +86,56 @@ namespace ByODBCDriver
                     Console.WriteLine("Error: " + ex.Message);
                     Console.ReadLine();
                 }
-            }
+            } 
+
+            //---------------------
+            /*
+            using (OdbcConnection connection = new OdbcConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    Console.WriteLine("Connection opened successfully.");
+                    StringBuilder insertQuery = new StringBuilder();
+                    insertQuery.Append("INSERT INTO maindev.default.OdbcWrittenCustomers (CustomerId, CustomerName, CustomerEmail, CustomerAddress) VALUES ");
+
+                    for (int i = 1; i <= 1000000; i++)
+                    {
+                        insertQuery.Append($"({i}, 'Customer {i}', 'customer{i}@example.com', 'Address {i}'),");
+
+                        if (i % batchSize == 0 || i == 1000000)
+                        {
+                            insertQuery.Length--; // Remove the trailing comma
+                            insertQuery.Append(";");
+
+                            using (OdbcCommand insertCmd = new OdbcCommand(insertQuery.ToString(), connection))
+                            {
+                                insertCmd.ExecuteNonQuery();
+                            }
+
+                            insertQuery.Clear();
+                            insertQuery.Append("INSERT INTO maindev.default.OdbcWrittenCustomers (CustomerId, CustomerName, CustomerEmail, CustomerAddress) VALUES ");
+
+                            if (i % batchSize == 0)
+                            {
+                                Console.WriteLine($"{i} records inserted.");
+                            }
+                        }
+                    }
+
+                    Console.WriteLine("All records inserted successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                    Console.ReadLine();
+                }
+            } */
+            
+            //---------------
+
+
+            //----------------------
         }
     }
 }
